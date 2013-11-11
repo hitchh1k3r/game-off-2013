@@ -1,6 +1,4 @@
-![GitHub Game Off Game Jam](https://f.cloud.github.com/assets/121322/1436486/25f88b78-4158-11e3-9b23-43596516362c.png)
-
-## The Challenge
+## gitFighter
 
 You have the entire month of November to create a **web-based** game *loosely* based on the theme "change".
 
@@ -16,7 +14,7 @@ All winners and runners-up will be showcased on our blog.
 
 ## Judging
 
-We have a handful of judges who are eager to play your games!  
+We have a handful of judges who are eager to play your games!
 
 * [Adam 'Atomic' Saltsman](https://twitter.com/adamatomic) - Game maker and dad, creator of Canabalt and Flixel.
 * [Aleissia Laidacker](https://twitter.com/Aleissia) - Team Lead AI at Ubisoft.

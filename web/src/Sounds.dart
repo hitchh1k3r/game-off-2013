@@ -1,0 +1,144 @@
+part of gitfighter;
+
+class Sound
+{
+
+  static AudioContext audio;
+  static bool useWebAudio;
+  Object element;
+  bool loaded = false;
+  
+  static void init()
+  {
+    try
+    {
+      audio = new AudioContext();
+      useWebAudio = true;
+    }
+    catch(e)
+    {
+      useWebAudio = false;
+    }
+  }
+
+  Sound(String url)
+  {
+    if(useWebAudio)
+    {
+      HttpRequest.request(url, method: 'GET', responseType: 'arraybuffer').then((HttpRequest request) {
+        audio.decodeAudioData(request.response).then((AudioBuffer buffer) {
+          element = buffer;
+          loaded = true;
+        });
+      });
+    }
+    else
+    {
+      element = new AudioElement();
+      document.body.append(element);
+      (element as AudioElement).onCanPlay.listen((Event e) {
+        if(!loaded)
+        {
+          loaded = true;
+        }
+      });
+      (element as AudioElement).src = url;
+      (element as AudioElement).preload = 'auto';
+      (element as AudioElement).controls = false;
+    }
+  }
+
+  Sound.andPlay(String url)
+  {
+    if(useWebAudio)
+    {
+      HttpRequest.request(url, method: 'GET', responseType: 'arraybuffer').then((HttpRequest request) {
+        audio.decodeAudioData(request.response).then((AudioBuffer buffer) {
+          element = buffer;
+          loaded = true;
+          play();
+        });
+      });
+    }
+    else
+    {
+      element = new AudioElement();
+      document.body.append(element);
+      (element as AudioElement).onCanPlay.listen((Event e) {
+        if(!loaded)
+        {
+          loaded = true;
+          play();
+        }
+      });
+      (element as AudioElement).src = url;
+      (element as AudioElement).preload = 'auto';
+      (element as AudioElement).controls = false;
+    }
+  }
+
+  Object play()
+  {
+    if(loaded)
+    {
+      if(useWebAudio)
+      {
+        AudioBufferSourceNode source = audio.createBufferSource();
+        source.connectNode(audio.destination);
+        source.buffer = element;
+        source.noteOn(0);
+        return source;
+      }
+      else
+      {
+        (element as AudioElement).currentTime = 0;
+        (element as AudioElement).play();
+        return element;
+      }
+    }
+  }
+
+}
+
+class Music extends Sound
+{
+
+  static Object activeMusic;
+  
+  Music(String url) : super(url);
+
+  Music.andPlay(String url) : super.andPlay(url);
+  
+  Object play()
+  {
+    stop();
+    activeMusic = super.play();
+    if(Sound.useWebAudio)
+    {
+      (activeMusic as AudioBufferSourceNode).loop = true;
+    }
+    else
+    {
+      (activeMusic as AudioElement).loop = true;
+    }
+    return activeMusic;
+  }
+  
+  static void stop()
+  {
+    if(activeMusic != null)
+    {
+      if(Sound.useWebAudio)
+      {
+        (activeMusic as AudioBufferSourceNode).noteOff(0);
+      }
+      else
+      {
+        (activeMusic as AudioElement).pause();
+        (activeMusic as AudioElement).currentTime = 0;
+      }
+      activeMusic = null;
+    }
+  }
+
+}
