@@ -1,0 +1,11 @@
+These are my original works, licensed under CC-BY 3.0:
+asteroid_large_01.blend
+asteroid_large_02.blend
+asteroid_large_03.blend
+asteroid_large_04.blend
+asteroid_large_05.blend
+crosshair.blend
+spaceship.blend
+
+The legal text for the Creative Commons Licenses are available at:
+CC-BY		http://creativecommons.org/licenses/by/3.0/legalcode

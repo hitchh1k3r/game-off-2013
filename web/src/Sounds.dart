@@ -5,6 +5,7 @@ class Sound
 
   static AudioContext audio;
   static bool useWebAudio;
+  double volume = 0.6;
   Object element;
   bool loaded = false;
   
@@ -84,13 +85,17 @@ class Sound
       if(useWebAudio)
       {
         AudioBufferSourceNode source = audio.createBufferSource();
-        source.connectNode(audio.destination);
+        GainNode gain = audio.createGainNode();
+        gain.gain.value = volume;
+        source.connectNode(gain);
+        gain.connectNode(audio.destination);
         source.buffer = element;
         source.noteOn(0);
         return source;
       }
       else
       {
+        (element as AudioElement).volume = volume;
         (element as AudioElement).currentTime = 0;
         (element as AudioElement).play();
         return element;
@@ -105,9 +110,15 @@ class Music extends Sound
 
   static Object activeMusic;
   
-  Music(String url) : super(url);
+  Music(String url) : super(url)
+  {
+    volume = 0.3;
+  }
 
-  Music.andPlay(String url) : super.andPlay(url);
+  Music.andPlay(String url) : super.andPlay(url)
+  {
+    volume = 0.3;
+  }
   
   Object play()
   {

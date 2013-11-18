@@ -10,16 +10,27 @@ import 'dart:math';
 import 'dart:collection';
 
 part 'Shaders.dart';
-part 'Entity.dart';
+part 'Geometry.dart';
 part 'VectorMath.dart';
 part 'Sounds.dart';
 part 'GameStates.dart';
 part 'Node.dart';
 part 'Camera.dart';
+part 'TextureCache.dart';
+part 'MyMath.dart';
+part 'Entites.dart';
 
+const bool DEBUG = true;
+const int TICKRATE = 20;
+
+Random random = new Random();
+CanvasElement canvas;
 RenderingContext gl;
 MatrixStack matrixStack;
-Program program;
+TextureCache textureCache;
+Program programStandard;
+Program programBackground;
+Program programGUI;
 int attribVertexPosition;
 int attribVertexNormal;
 int attribVertexTextureCoord;
@@ -31,83 +42,333 @@ UniformLocation uniformBlue;
 UniformLocation uniformMMatrix;
 UniformLocation uniformVMatrix;
 UniformLocation uniformPMatrix;
-DAG_Node scene;
-DAG_Node spinNode;
-Camera camera = new Camera();
-const bool DEBUG = true;
-const int TICKRATE = 20;
-Entity mesh;
+UniformLocation uniformSpriteSampler;
+UniformLocation uniformDiffuseSampler;
+UniformLocation uniformEmissiveSampler;
+
+Buffer screenRectBuffer;
+
+int attribBackgroundVertex;
+UniformLocation uniformBackgroundVMatrix;
+UniformLocation uniformBackgroundRender3D;
+
+Geometry asteroid1;
+Geometry asteroid2;
+Geometry asteroid3;
+Geometry asteroid4;
+Geometry asteroid5;
+Geometry ship;
+Crosshair crosshair;
+
 int frame = 0;
 int tickCount = 0;
+
 bool game_textured = false;
 bool game_3d = true;
+bool isIn = true;
+int fadeTime = 0;
+int maxCircle = 3000;
+
+Camera camera = new Camera();
+PlayerShip playerShip;
+List<Asteroid> asteroids = new List<Asteroid>();
+DAG_Node scene;
+
+Sound sndExplosion;
+
+     ///////////////////////////////////////////////////////////////
+
+void tickFade()
+{
+  if(fadeTime > 0)
+  {
+    Element circle = querySelector("#circle");
+    --fadeTime;
+    if(fadeTime == 0)
+    {
+      if(isIn)
+      {
+        document.body.style.backgroundColor = "#000000";
+      }
+      else
+      {
+        document.body.style.backgroundColor = "#ffffff";
+      }
+      circle.style.top = "345px";
+      circle.style.left = "495px";
+      circle.style.width = "10px";
+      circle.style.height = "10px";
+    }
+    else
+    {
+      int radius = (isIn ? 5 + ((maxCircle~/15)*(15-fadeTime)) : 5 + ((maxCircle~/15)*fadeTime));
+      circle.style.top = (350 - radius).toString() + "px";
+      circle.style.left = (500 - radius).toString() + "px";
+      circle.style.width = (2 * radius).toString() + "px";
+      circle.style.height = (2 * radius).toString() + "px";
+    }
+  }
+}
+
+     ///////////////////////////////////////////////////////////////
 
 void init()
 {
-  CanvasElement canvas = querySelector("#canvas");
+  canvas = querySelector("#canvas");
   gl = canvas.getContext3d();
   matrixStack = new MatrixStack();
-  gl.enable(DEPTH_TEST);
+  textureCache = new TextureCache();
   gl.enable(CULL_FACE);
-  gl.frontFace(CW);
+  gl.frontFace(CCW);
   gl.cullFace(BACK);
   gl.clearColor(0, 0, 0, 1);
+  gl.blendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
   
   Sound.init();
-  // Sound sounda = new Sound('sounds/a.wav');
-  // Sound soundb = new Sound('sounds/b.wav');
-  // Sound soundc = new Sound('sounds/c.wav');
-  // Music music = new Music('music/song.ogg');
-  mesh = new Entity('entities/space-ship.json');
-  spinNode = new DAG_Node([mesh]);
+  sndExplosion = new Sound('sounds/explosion.wav');
+  // Music music = new Music.andPlay('music/crystalline.ogg');
+  asteroid1 = new Geometry('entities/asteroid_large_01.json');
+  asteroid2 = new Geometry('entities/asteroid_large_02.json');
+  asteroid3 = new Geometry('entities/asteroid_large_03.json');
+  asteroid4 = new Geometry('entities/asteroid_large_04.json');
+  asteroid5 = new Geometry('entities/asteroid_large_05.json');
+  crosshair = new Crosshair();
+  ship = new Geometry('entities/space-ship.json');
+  Random rand = new Random();
   List<drawable> children = new List<drawable>();
-  for(int x = -1; x <= 1; ++x)
+  playerShip = new PlayerShip();
+  children.add(playerShip.node);
+  for(int i = 0; i < 100; ++i)
   {
-    for(int y = -1; y <= 1; ++y)
-    {
-      for(int z = -1; z <= 1; ++z)
-      {
-        DAG_Node newNode = new DAG_Node([spinNode]);
-        newNode.transform = MatrixFactory.translationMatrix((x * 100.0), (y * 100.0), (z * 100.0));
-        children.add(newNode);
-      }
-    }
+    asteroids.add(new Asteroid(new Vec3((random.nextDouble() * 6000) - 3000, (random.nextDouble() * 6000) - 3000, (random.nextDouble() * 6000) - 3000)));
+    children.add(asteroids[i].node);
   }
   scene = new DAG_Node(children);
 }
 
+    ///////////////////////////////////////////////////////////////
+    //                         GAME TICK                         //
+    ///////////////////////////////////////////////////////////////
+
 void tick(GameStates states)
 {
+  tickFade();
   ++tickCount;
   camera.tick();
-  camera.camTilt(1.0);
-  camera.camPan(1.1);
-  camera.camRoll(1.0);
-  if(states.isKeyDown(49))
+  playerShip.setCamera();
+
+  if(states.isKeyDown(32))
   {
-    print('holding 1');
+    if(game_3d)
+    {
+      Vec3 direction = new Vec3(5.0, 0.0, 0.0)..w = 0.0;
+      if(states.isKeyDown(16))
+      {
+        direction.x = 10.0;
+      }
+      direction.multiply(playerShip.node.transform);
+      playerShip.velocity += direction;
+    }
+    else
+    {
+      double deltaX = states.mousePoint.x - 500.0;
+      double deltaY = states.mousePoint.y - 350.0;
+      double magnitude = sqrt( (deltaX *deltaX) + (deltaY * deltaY) );
+      if(magnitude > 0)
+      {
+        double speed = 15.0;
+        if(states.isKeyDown(16))
+        {
+          speed = 25.0;
+        }
+        playerShip.velocity.x += deltaX * speed / magnitude;
+        playerShip.velocity.y += deltaY * speed / magnitude;
+      }
+    }
+  }
+
+  scene.tick(0);
+  playerShip.tick();
+  for(Asteroid asteroid in asteroids.toList())
+  {
+    if(asteroid.checkPlayerCollide())
+    {
+      sndExplosion.play();
+      scene.nodes.remove(asteroid.node);
+      asteroids.remove(asteroid);
+    }
+    else
+    {
+      asteroid.tick();
+    }
+  }
+
+  if(game_3d)
+  {
+    double xOffset = min((states.mousePoint.x - 500.0).abs(), 500.0);
+    double yOffset = min((states.mousePoint.y - 350.0).abs(), 350.0);
+    double mag = playerShip.velocity.magnitude();
+    if(states.isKeyDown(16))
+    {
+      mag *= 0.5;
+    }
+    xOffset *= mag;
+    yOffset *= mag;
+    crosshair.aimMatrix = new Matrix4x3.identity();
+    if(states.isMouseDown(2))
+    {
+      Matrix4x3 matrix = MatrixFactory.rotationMatrix(((states.mousePoint.x > 500.0 ? 1.0 : -1.0) * xOffset / 50000.0), 1.0, 0.0, 0.0);
+      crosshair.aimMatrix.multiply(matrix);
+      playerShip.node.transform.multiply(matrix);
+    }
+    else
+    {
+      Matrix4x3 matrix = MatrixFactory.rotationMatrix(((states.mousePoint.x > 500.0 ? -1.0 : 1.0) * xOffset / 150000.0), 0.0, 0.0, 1.0);
+      crosshair.aimMatrix.multiply(matrix);
+      playerShip.node.transform.multiply(matrix);
+    }
+    if(states.isMouseDown(2))
+    {
+      Matrix4x3 matrix = MatrixFactory.rotationMatrix(((states.mousePoint.y > 350.0 ? 1.0 : -1.0) * yOffset / 250000.0), 0.0, 1.0, 0.0);
+      crosshair.aimMatrix.multiply(matrix);
+      playerShip.node.transform.multiply(matrix);
+    }
+    else
+    {
+      Matrix4x3 matrix = MatrixFactory.rotationMatrix(((states.mousePoint.y > 350.0 ? 1.0 : -1.0) * yOffset / 150000.0), 0.0, 1.0, 0.0);
+      crosshair.aimMatrix.multiply(matrix);
+      playerShip.node.transform.multiply(matrix);
+    }
+  }
+  else
+  {
+    double mouseX = states.mousePoint.x - 500.0;
+    double mouseY = states.mousePoint.y - 350.0;
+    playerShip.node.transform = MatrixFactory.translationMatrix(playerShip.position.x, playerShip.position.y, playerShip.position.z);
+    playerShip.node.transform.multiply(MatrixFactory.rotationMatrix(MyMath.pointToAngle(mouseX, mouseY), 0.0, 0.0, 1.0));
+    crosshair.position.x = sqrt((mouseX * mouseX) + (mouseY * mouseY));
+  }
+
+  if(states.isKeyDown(87)) // W
+  {
+    playerShip.node.transform.multiply(MatrixFactory.rotationMatrix(-0.05, 0.0, 1.0, 0.0));
+  }
+  if(states.isKeyDown(65)) // A
+  {
+    playerShip.node.transform.multiply(MatrixFactory.rotationMatrix(0.05, 0.0, 0.0, 1.0));
+  }
+  if(states.isKeyDown(83)) // S
+  {
+    playerShip.node.transform.multiply(MatrixFactory.rotationMatrix(0.05, 0.0, 1.0, 0.0));
+  }
+  if(states.isKeyDown(68)) // D
+  {
+    playerShip.node.transform.multiply(MatrixFactory.rotationMatrix(-0.05, 0.0, 0.0, 1.0));
+  }
+  if(states.isKeyDown(81)) // Q
+  {
+    playerShip.node.transform.multiply(MatrixFactory.rotationMatrix(-0.05, 1.0, 0.0, 0.0));
+  }
+  if(states.isKeyDown(69)) // E
+  {
+    playerShip.node.transform.multiply(MatrixFactory.rotationMatrix(0.05, 1.0, 0.0, 0.0));
+  }
+
+  if(states.keyPress(49))
+  {
+    game_3d = !game_3d;
+    if(game_3d)
+    {
+      for(Asteroid asteroid in asteroids)
+      {
+        asteroid.position.z = (random.nextDouble() * 6000) - 3000;
+      }
+      matrixStack.projectionMatrix = MatrixFactory.perspectiveMatrix(45, 1.428571428571429, 0.01, 3000);
+    }
+    else
+    {
+      playerShip.position.z = 0.0;
+      for(Asteroid asteroid in asteroids)
+      {
+        asteroid.position.z = 0.0;
+      }
+      matrixStack.projectionMatrix = MatrixFactory.orthogonalMatrix(0.0, 1000.0, 0.0, 700.0, 1.0, -1.0);
+    }
+    matrixStack.projectionMatrix.writeToUniform(uniformPMatrix);
   }
   if(states.keyPress(50))
   {
-    print('pressed 2');
+    game_textured = !game_textured;
   }
-  if(states.keyPressOrRepeat(51))
+  if(states.mousePress(0) || states.mouseRepeat(0))
   {
-    print('pressed or held 3');
+    print('SHOOT!');
+  }
+  if(states.keyPress(53))
+  {
+    print(document.body.style.backgroundColor + "to white");
+    maxCircle = window.screen.available.width;
+    Element circle = querySelector("#circle");
+    circle.style.top = (350 - maxCircle).toString() + "px";
+    circle.style.left = (500 - maxCircle).toString() + "px";
+    circle.style.width = (2 * maxCircle).toString() + "px";
+    circle.style.height = (2 * maxCircle).toString() + "px";
+    document.body.style.backgroundColor = "#ffffff";
+    isIn = false;
+    fadeTime = 15;
+  }
+  if(states.keyPress(54))
+  {
+    print(document.body.style.backgroundColor + "to black");
+    maxCircle = window.screen.available.width;
+    isIn = true;
+    fadeTime = 15;
   }
 }
+
+     ///////////////////////////////////////////////////////////////
+     //                         GAME DRAW                         //
+     ///////////////////////////////////////////////////////////////
 
 void draw(double partialTickTime)
 {
   ++frame;
   gl.clear(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
-  spinNode.transform = MatrixFactory.rotationMatrix(frame/100, 0.0, 0.0, 1.0);
-  matrixStack.viewMatrix = camera.getMatrix(partialTickTime).inverse();
-  matrixStack.viewMatrix.writeToUniform(uniformVMatrix);
-  gl.uniform1i(uniformRender3D, game_3d ? 1 : 0);
-  gl.uniform1i(uniformUseTexture, game_textured ? 1 : 0);
-  scene.draw();
+
+  // DRAW BACGROUND
+  gl.disable(DEPTH_TEST);
+  gl.disable(BLEND);
+  gl.useProgram(programBackground);
+
+  camera.getMatrix(partialTickTime).writeToUniform(uniformBackgroundVMatrix);
+  gl.enableVertexAttribArray(attribBackgroundVertex);
+  gl.bindBuffer(ARRAY_BUFFER, screenRectBuffer);
+  gl.vertexAttribPointer(attribBackgroundVertex, 2, FLOAT, false, 0, 0);
+  gl.uniform1i(uniformBackgroundRender3D, game_3d ? 1 : 0);
+  gl.drawArrays(TRIANGLES, 0, 6);
+  gl.disableVertexAttribArray(attribBackgroundVertex);
+  
+  if(programStandard != null)
+  {
+    // DRAW SCENE
+    gl.enable(DEPTH_TEST);
+    gl.enable(BLEND);
+    gl.useProgram(programStandard);
+    matrixStack.viewMatrix = camera.getMatrix(partialTickTime).inverse();
+    matrixStack.viewMatrix.writeToUniform(uniformVMatrix);
+    gl.uniform1i(uniformRender3D, game_3d ? 1 : 0);
+    gl.uniform1i(uniformUseTexture, game_textured ? 1 : 0);
+    scene.draw(partialTickTime);
+  }
+
+  // DRAW GUI
+//  gl.disable(DEPTH_TEST);
+//  gl.disable(BLEND);
+//  gl.useProgram(programGUI);
+  
 }
+
+     ///////////////////////////////////////////////////////////////
 
 main()
 {
@@ -151,23 +412,43 @@ main()
     tickTimer = new Future.delayed(new Duration(milliseconds: 16 - renderTime), loop);
   }
   
-  loadProgram('shaders/vertex-shader.txt', 'shaders/fragment-shader.txt', (Program prog) {
-    program = prog;
-    attribVertexPosition = gl.getAttribLocation(program, 'aVertexPosition');
-    attribVertexNormal = gl.getAttribLocation(program, 'aVertexNormal');
-    attribVertexTextureCoord = gl.getAttribLocation(program, 'aVertexTextureCoord');
-    uniformMMatrix = gl.getUniformLocation(program, 'uMMatrix');
-    uniformPMatrix = gl.getUniformLocation(program, 'uPMatrix');
-    uniformVMatrix = gl.getUniformLocation(program, 'uVMatrix');
-    uniformRender3D = gl.getUniformLocation(program, 'uRender3D');
-    uniformUseTexture = gl.getUniformLocation(program, 'uUseTexture');
-    uniformRed = gl.getUniformLocation(program, 'uRed');
-    uniformGreen = gl.getUniformLocation(program, 'uGreen');
-    uniformBlue = gl.getUniformLocation(program, 'uBlue');
-    gl.useProgram(program);
-    matrixStack.projectionMatrix = MatrixFactory.perspectiveMatrix(45, 1.8, 0.01, 1000);
-    // matrixStack.projectionMatrix = MatrixFactory.orthogonalMatrix(0.0, 900.0, 0.0, 500.0, 255.0, 0.0);
-    matrixStack.projectionMatrix.writeToUniform(uniformPMatrix);
+  loadProgram('shaders/background-vertex-shader.txt', 'shaders/background-fragment-shader.txt', (Program prog) {
+    programBackground = prog;
+    gl.useProgram(programBackground);
+    attribBackgroundVertex = gl.getAttribLocation(programBackground, 'aVertexPosition');
+    uniformBackgroundVMatrix = gl.getUniformLocation(programBackground, 'uVMatrix');
+    uniformBackgroundRender3D = gl.getUniformLocation(programBackground, 'uRender3D');
+    screenRectBuffer = gl.createBuffer();
+    gl.bindBuffer(ARRAY_BUFFER, screenRectBuffer);
+    gl.bufferDataTyped(ARRAY_BUFFER, new Float32List.fromList([-1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0]), STATIC_DRAW);
+
+    loadProgram('shaders/standard-vertex-shader.txt', 'shaders/standard-fragment-shader.txt', (Program prog) {
+      programStandard = prog;
+      gl.useProgram(programStandard);
+      attribVertexPosition = gl.getAttribLocation(programStandard, 'aVertexPosition');
+      attribVertexNormal = gl.getAttribLocation(programStandard, 'aVertexNormal');
+      attribVertexTextureCoord = gl.getAttribLocation(programStandard, 'aVertexTextureCoord');
+      uniformMMatrix = gl.getUniformLocation(programStandard, 'uMMatrix');
+      uniformPMatrix = gl.getUniformLocation(programStandard, 'uPMatrix');
+      uniformVMatrix = gl.getUniformLocation(programStandard, 'uVMatrix');
+      uniformRender3D = gl.getUniformLocation(programStandard, 'uRender3D');
+      uniformUseTexture = gl.getUniformLocation(programStandard, 'uUseTexture');
+      uniformRed = gl.getUniformLocation(programStandard, 'uRed');
+      uniformGreen = gl.getUniformLocation(programStandard, 'uGreen');
+      uniformBlue = gl.getUniformLocation(programStandard, 'uBlue');
+      uniformSpriteSampler = gl.getUniformLocation(programStandard, 'uSpriteSampler');
+      uniformDiffuseSampler = gl.getUniformLocation(programStandard, 'uDiffuseSampler');
+      uniformEmissiveSampler = gl.getUniformLocation(programStandard, 'uEmissiveSampler');
+      if(game_3d)
+      {
+        matrixStack.projectionMatrix = MatrixFactory.perspectiveMatrix(45, 1.428571428571429, 0.01, 6000);
+      }
+      else
+      {
+        matrixStack.projectionMatrix = MatrixFactory.orthogonalMatrix(0.0, 1000.0, 0.0, 700.0, 1.0, -1.0);
+      }
+      matrixStack.projectionMatrix.writeToUniform(uniformPMatrix);
+    });
     loop();
   });
 }

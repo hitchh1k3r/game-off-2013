@@ -1,8 +1,13 @@
 part of gitfighter;
 
-double deg2rad(double degrees)
+class Vec2
 {
-  return degrees * PI / 180.0;
+
+  double x;
+  double y;
+
+  Vec2(this.x, this.y);
+
 }
 
 class Vec3
@@ -18,6 +23,11 @@ class Vec3
     w = 1.0;
   }
 
+  operator +(Vec3 other)
+  {
+    return new Vec3(x + other.x, y + other.y, z + other.z);
+  }
+
   void multiply(Matrix4 m)
   {
     double oX = x;
@@ -28,6 +38,30 @@ class Vec3
     y = m._elements[1] * oX + m._elements[5] * oY + m._elements[9] * oZ + m._elements[13] * oW;
     z = m._elements[2] * oX + m._elements[6] * oY + m._elements[10] * oZ + m._elements[14] * oW;
     w = m._elements[3] * oX + m._elements[7] * oY + m._elements[11] * oZ + m._elements[15] * oW;
+  }
+
+  void add(double aX, double aY, double aZ)
+  {
+    x += aX;
+    y += aY;
+    z += aZ;
+  }
+
+  void scale(double factor)
+  {
+    x *= factor;
+    y *= factor;
+    z *= factor;
+  }
+
+  double sqMagnitude()
+  {
+    return (x * x) + (y * y) + (z * z);
+  }
+
+  double magnitude()
+  {
+    return sqrt( sqMagnitude() );
   }
 
 }
@@ -98,10 +132,10 @@ abstract class Matrix4
   void printMatrix()
   {
     print('┌\t\t\t\t┐');
-    print('│ '+_elements[0].toStringAsFixed(3)+'\t'+_elements[4].toStringAsFixed(3)+'\t'+_elements[8].toStringAsFixed(3)+'\t'+_elements[12].toStringAsFixed(3)+'\t│');
-    print('│ '+_elements[1].toStringAsFixed(3)+'\t'+_elements[5].toStringAsFixed(3)+'\t'+_elements[9].toStringAsFixed(3)+'\t'+_elements[13].toStringAsFixed(3)+'\t│');
-    print('│ '+_elements[2].toStringAsFixed(3)+'\t'+_elements[6].toStringAsFixed(3)+'\t'+_elements[10].toStringAsFixed(3)+'\t'+_elements[14].toStringAsFixed(3)+'\t│');
-    print('│ '+_elements[3].toStringAsFixed(3)+'\t'+_elements[7].toStringAsFixed(3)+'\t'+_elements[11].toStringAsFixed(3)+'\t'+_elements[15].toStringAsFixed(3)+'\t│');
+    print('│ '+_elements[0].toStringAsFixed(5)+'\t'+_elements[4].toStringAsFixed(5)+'\t'+_elements[8].toStringAsFixed(5)+'\t'+_elements[12].toStringAsFixed(5)+'\t│');
+    print('│ '+_elements[1].toStringAsFixed(5)+'\t'+_elements[5].toStringAsFixed(5)+'\t'+_elements[9].toStringAsFixed(5)+'\t'+_elements[13].toStringAsFixed(5)+'\t│');
+    print('│ '+_elements[2].toStringAsFixed(5)+'\t'+_elements[6].toStringAsFixed(5)+'\t'+_elements[10].toStringAsFixed(5)+'\t'+_elements[14].toStringAsFixed(5)+'\t│');
+    print('│ '+_elements[3].toStringAsFixed(5)+'\t'+_elements[7].toStringAsFixed(5)+'\t'+_elements[11].toStringAsFixed(5)+'\t'+_elements[15].toStringAsFixed(5)+'\t│');
     print('└\t\t\t\t┘');
   }
 
@@ -163,6 +197,16 @@ class Matrix4x3 extends Matrix4
         this._elements[1], this._elements[5], this._elements[9],
         this._elements[2], this._elements[6], this._elements[10],
         X, Y, Z);
+  }
+
+  Matrix4x3 interpolate(Matrix4x3 m, double partial)
+  {
+    Matrix4x3 result = new Matrix4x3.identity();
+    for(int i = 0; i < 16; ++i)
+    {
+      result._elements[i] = (this._elements[i] * (1.0 - partial)) + (m._elements[i] * partial);
+    }
+    return result;
   }
 
 }

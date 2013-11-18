@@ -6,10 +6,57 @@ body
   font-weight: normal;
   line-height: 1.2em;
   margin: 15px;
-  color: #ffffff;
+  color: #999999;
+  overflow: hidden;
 }
 
 .center
 {
   text-align: center;
+}
+
+.title
+{
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  z-index: 100;
+}
+
+.controlTable
+{
+  position: relative;
+  z-index: 100;
+  display: inline-block;
+}
+
+.canvas_wrapper
+{
+  display: inline-block;
+  position: relative;
+  width: 1000px;
+  height: 700px;
+}
+
+#canvas
+{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1000px;
+  height: 700px;
+  z-index: 100;
+  cursor: none;
+}
+
+#circle
+{
+  background: #000000;
+  border-radius: 50%;
+  height: 0;
+  width: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
 }

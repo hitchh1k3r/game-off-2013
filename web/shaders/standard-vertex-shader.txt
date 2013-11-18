@@ -1,0 +1,31 @@
+precision mediump float;
+precision mediump int;
+
+attribute vec3 aVertexPosition;
+attribute vec3 aVertexNormal;
+attribute vec2 aVertexTextureCoord;
+
+uniform mat4 uMMatrix;
+uniform mat4 uPMatrix;
+uniform mat4 uVMatrix;
+uniform sampler2D uSpriteSampler;
+uniform sampler2D uDiffuseSampler;
+uniform sampler2D uEmissiveSampler;
+uniform int uRender3D;
+uniform int uUseTexture;
+uniform float uRed;
+uniform float uGreen;
+uniform float uBlue;
+
+varying vec4 vWorldSpaceNormal;
+varying vec2 vVertexTextureCoord;
+
+void main()
+{
+	gl_Position =  uPMatrix * uVMatrix * uMMatrix * vec4(aVertexPosition, 1.0);
+	vWorldSpaceNormal = uMMatrix * vec4(aVertexNormal, 0.0);
+	if(uUseTexture == 1)
+	{
+		vVertexTextureCoord = aVertexTextureCoord;
+	}
+}

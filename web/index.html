@@ -3,35 +3,40 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>gitFighter :: GitHub Game Off 2013</title>
+    <title>gitFighter</title>
     <link rel="stylesheet" href="gameoff2013.css">
   </head>
   <body>
-    <h1>gitFighter :: GitHub Game Off 2013</h1>
+    <h1 class="title">gitFighter</h1>
 
     <br /><br /><br /><br />
 
     <div class="center">
-      <canvas id="canvas" width="900" height="500"></canvas>
+      <div class="canvas_wrapper">
+        <canvas id="canvas" width="1000" height="700"></canvas>
+        <div id="circle"></div>
+      </div>
     </div>
 
     <br /><br />
 
-    <!--
-      <center>
-        <table><tr><td valign="top"><b>Controls:</b></td>
+      <div class="center">
+        <table class="controlTable"><tr><td valign="top"><b>Controls:</b></td>
         <td>
         
-        W A S D - Move<br />
-        Arrows - Move<br />
-        Space - Boost<br />
+        W A S D - AIM<br />
         Mouse - Aim<br />
-        Enter - Fire<br />
-        Left Mouse - Fire<br />
+        Q E - Roll<br />
+        Right Click - Roll<br />
+        Space - Move<br />
+        Shift + Space - Move Faster<hr />
+        1 - Toggle 2D/3D<br />
+        2 - Toggle Textures (only 3D complete)<br />
+        5 - White Background<br />
+        6 - Black Background
         
         </td></tr></table>
-      </center>
-    -->
+      </div>
 
     <!-- <script type="application/dart" src="src/Main.dart"></script> <!-- -->
     <script src="js/Main.dart.js"></script> <!-- -->
