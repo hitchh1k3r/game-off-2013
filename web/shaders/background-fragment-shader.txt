@@ -1,6 +1,14 @@
 precision mediump float;
+precision mediump int;
 
-varying vec4 vSkyPoint;
+uniform mat4 uVMatrix;
+uniform int uRender3D;
+uniform int uUseTextures;
+uniform int uIsIn;
+uniform float uAspect;
+uniform float uCircleSize;
+
+varying vec2 vCircleCoord;
 
 //
 // Description : Array and textureless GLSL 2D/3D/4D simplex 
@@ -31,7 +39,7 @@ vec4 taylorInvSqrt(vec4 r)
 }
 
 float snoise(vec3 v)
-  { 
+{ 
   const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
   const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
 
@@ -103,13 +111,41 @@ float snoise(vec3 v)
   m = m * m;
   return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), 
                                 dot(p2,x2), dot(p3,x3) ) );
-  }
+}
+
+////////////////////////////////////
+// END OF SIMPLEX NOISE FUNCTIONS //
+////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// Description : Uses simplex noise functions to generate stars and       //
+//               nebulae in a sphere aroung the observer.                 //
+//     License : Copyright (C) 2013                                       //
+//               Distributed under the MIT License. See LICENSE file.     //
+//               https://github.com/hitchh1k3r/gitFighter                 //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 void main()
 {
-//	float light = (max(snoise(20.0*vSkyPoint.xyz), 0.8)-0.8)*5.0;
-	float light = 0.0;
-	float nebula1 = snoise(0.5*vSkyPoint.xyz);
-	float nebula2 = snoise(0.25*vSkyPoint.zxy);
-	gl_FragColor = vec4(max(nebula1/2.0, light), max(nebula2/4.0, light), max(nebula2/4.0, light), 1.0);
+	if(length(vec2(vCircleCoord.x + (uIsIn == 1 ? 0.0 : 0.1), vCircleCoord.y)) > uCircleSize)
+		discard;
+	vec3 sphereCoord;
+	if(uRender3D == 1)
+		sphereCoord = (uVMatrix * vec4(normalize(vec3(vCircleCoord, -1.0)), 0.0)).xyz;
+	else
+		sphereCoord = (uVMatrix * vec4(vCircleCoord, -1.0, 0.00005)).xyz;
+	if(uUseTextures == 1)
+	{
+		float nebula = snoise(0.5*sphereCoord.xyz);
+		float light = (max(snoise(20.0*sphereCoord.xyz), 0.84)-0.84)*6.25;
+		gl_FragColor = vec4(max(nebula/2.0, light), light, light, 1.0);
+	}
+	else
+	{
+		float light = (max(snoise(25.0*sphereCoord.xyz), 0.8)-0.8)*5.0;
+		gl_FragColor = vec4(light, light, light, 1.0);
+	}
 }

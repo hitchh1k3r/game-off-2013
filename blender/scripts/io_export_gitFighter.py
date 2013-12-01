@@ -75,7 +75,7 @@ def main(filepath):
             else:
                 out.write( ', ' )
             out.write( str(index + indexOffset) )
-        indexOffset += len(material[1])
+        indexOffset += len(material[2])
     out.write( ' ],\n' )
 
     out.write('  "vertexPositions" : [ ')

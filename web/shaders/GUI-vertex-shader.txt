@@ -1,0 +1,16 @@
+precision mediump float;
+precision mediump int;
+
+attribute vec3 aVertexPosition;
+attribute vec2 aVertexTextureCoord;
+
+uniform float uXOff;
+uniform float uYOff;
+
+varying vec2 vVertexTextureCoord;
+
+void main()
+{
+	gl_Position =  vec4((uXOff+aVertexPosition.x-500.0)/500.0, (350.0-(uYOff+aVertexPosition.y))/350.0, 0.0, 1.0);
+	vVertexTextureCoord = aVertexTextureCoord;
+}

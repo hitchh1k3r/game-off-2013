@@ -23,6 +23,11 @@ class Vec3
     w = 1.0;
   }
 
+  Vec3.direction(this.x, this.y, this.z)
+  {
+    w = 0.0;
+  }
+
   operator +(Vec3 other)
   {
     return new Vec3(x + other.x, y + other.y, z + other.z);
@@ -34,10 +39,10 @@ class Vec3
     double oY = y;
     double oZ = z;
     double oW = w;
-    x = m._elements[0] * oX + m._elements[4] * oY + m._elements[8] * oZ + m._elements[12] * oW;
-    y = m._elements[1] * oX + m._elements[5] * oY + m._elements[9] * oZ + m._elements[13] * oW;
-    z = m._elements[2] * oX + m._elements[6] * oY + m._elements[10] * oZ + m._elements[14] * oW;
-    w = m._elements[3] * oX + m._elements[7] * oY + m._elements[11] * oZ + m._elements[15] * oW;
+    x = (m._elements[0] * oX) + (m._elements[4] * oY) + (m._elements[8] * oZ) + (m._elements[12] * oW);
+    y = (m._elements[1] * oX) + (m._elements[5] * oY) + (m._elements[9] * oZ) + (m._elements[13] * oW);
+    z = (m._elements[2] * oX) + (m._elements[6] * oY) + (m._elements[10] * oZ) + (m._elements[14] * oW);
+    w = (m._elements[3] * oX) + (m._elements[7] * oY) + (m._elements[11] * oZ) + (m._elements[15] * oW);
   }
 
   void add(double aX, double aY, double aZ)
@@ -62,6 +67,11 @@ class Vec3
   double magnitude()
   {
     return sqrt( sqMagnitude() );
+  }
+
+  double dot(Vec3 other)
+  {
+    return x*other.x + y*other.y + z*other.z;
   }
 
 }
@@ -298,6 +308,15 @@ class MatrixFactory
           x,   y,   z);
   }
 
+  static Matrix4x3 scaleMatrix(num sX, num sY, num sZ)
+  {
+    return new Matrix4x3.make(
+         sX, 0.0, 0.0,
+        0.0,  sY, 0.0,
+        0.0, 0.0,  sZ,
+        0.0, 0.0, 0.0);
+  }
+
   static Matrix4x3 rotationMatrix(num angle, num x, num y, num z)
   {
     num invLen = 1 / sqrt(x*x + y*y + z*z);
@@ -348,6 +367,36 @@ class MatrixFactory
          0.0,                          2.0*invHeight,                 0.0,                       0.0,
          0.0,                          0.0,                           2.0*invDepth,              0.0,
         -1.0*(xLeft+xRight)*invWidth, -1.0*(yBottom+yTop)*invHeight, -1.0*(zFar+zNear)*invDepth, 1.0);
+  }
+
+}
+
+class VectorMath
+{
+
+  static double sqDistanceToLine(Vec3 line1, Vec3 line2, Vec3 point)
+  {
+    Vec3 line = new Vec3(line2.x-line1.x, line2.y-line1.y, line2.z-line1.z);
+    double length = line.magnitude();
+    line.scale(1.0/length);
+    Vec3 projection = new Vec3(point.x-line1.x, point.y-line1.y, point.z-line1.z);
+    double distance = projection.dot(line);
+    Vec3 closest;
+    if(distance < 0)
+    {
+      closest = new Vec3(line1.x, line1.y, line1.z);
+    }
+    else if(distance > length)
+    {
+      closest = new Vec3(line2.x, line2.y, line2.z);
+    }
+    else
+    {
+      line.scale(distance);
+      closest = new Vec3(line1.x+line.x, line1.y+line.y, line1.z+line.z);
+    }
+    closest.add(-point.x, -point.y, -point.z);
+    return closest.sqMagnitude();
   }
 
 }

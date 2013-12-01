@@ -1,14 +1,17 @@
 precision mediump float;
+precision mediump int;
 
 attribute vec2 aVertexPosition;
 
-uniform mat4 uVMatrix;
 uniform int uRender3D;
+uniform float uAspect;
+uniform float uCircleSize;
 
-varying vec4 vSkyPoint;
+varying vec2 vCircleCoord;
 
 void main()
 {
 	gl_Position =  vec4(aVertexPosition, 0.0, 1.0);
-	vSkyPoint = uVMatrix * vec4(normalize(vec3(aVertexPosition.x, (uRender3D == 1 ? 1.0 : -1.0) * aVertexPosition.y, -1.0)), 0.00005);
+//	vCircleCoord = vec2(aVertexPosition.x, (uRender3D == 1 ? 1.0 : -1.0) * aVertexPosition.y);
+	vCircleCoord = vec2(aVertexPosition.x, (uRender3D == 1 ? 1.0 : -1.0) * aVertexPosition.y / uAspect);
 }

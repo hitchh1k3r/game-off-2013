@@ -165,10 +165,10 @@ class Geometry implements drawable
       materials.add(new Material());
       materials[materialID].numIndices = material['numindices'];
       texturesToLoad += 2;
-      materials[materialID].diffuseTexture = textureCache.loadTexture(material['diffuse'], this);
-      materials[materialID].emissiveTexture = textureCache.loadTexture(material['emissive'], this);
+      materials[materialID].diffuseTexture = textureCache.loadTexture(material['diffuse'], this, true);
+      materials[materialID].emissiveTexture = textureCache.loadTexture(material['emissive'], this, true);
     }
-    spriteTexture = textureCache.loadTexture(data['sprite']['sheet'], this);
+    spriteTexture = textureCache.loadTexture(data['sprite']['sheet'], this, false);
     loaded = true;
   }
 
@@ -184,7 +184,7 @@ class Geometry implements drawable
     return input;
   }
 
-  List<double> uvBoxList(num left, num top, num right, num bottom)
+  static List<double> uvBoxList(num left, num top, num right, num bottom)
   { // faces: 1, 2, 3 and 1, 4, 2
     // 3 --- 2
     // |  /  |
@@ -282,6 +282,99 @@ class Geometry implements drawable
       gl.disableVertexAttribArray(attribVertexNormal);
       gl.disableVertexAttribArray(attribVertexTextureCoord);
     }
+  }
+
+}
+
+class Billboard extends drawable
+{
+
+  Texture spriteTexture;
+  Buffer boxBuffer;
+  List<Buffer> texBuffers = new List<Buffer>();
+  List<Color> colors;
+
+  Billboard(BoundingBox bounds, this.colors, List<Rectangle> sprites)
+  {
+    spriteTexture = textureCache.loadTexture('textures/sprites.png', null, false);
+    boxBuffer = gl.createBuffer();
+    for(int i = 0; i < sprites.length; ++i)
+    {
+      texBuffers.add(gl.createBuffer());
+    }
+
+    gl.bindBuffer(ARRAY_BUFFER, boxBuffer);
+    gl.bufferDataTyped(ARRAY_BUFFER, new Float32List.fromList(bounds.getVertCoords()), STATIC_DRAW);
+
+    for(int i = 0; i < sprites.length; ++i)
+    {
+      gl.bindBuffer(ARRAY_BUFFER, texBuffers[i]);
+      gl.bufferDataTyped(ARRAY_BUFFER, new Float32List.fromList(Geometry.uvBoxList((sprites[i].left+0.5)/512.0, (sprites[i].top+0.5)/256.0, (sprites[i].left+sprites[i].width-0.5)/512.0, (sprites[i].top+sprites[i].height-0.5)/256.0)), STATIC_DRAW);
+    }
+  }
+
+  void draw(double partialTime)
+  {
+    drawPlus(partialTime);
+  }
+
+  void drawPlus(double partialTime, {double rotation: 0.0, double opacity: 1.0, bool forceTexture: false, int version: 0})
+  {
+    if(fadeTime > 0 && opacity < 1.0)
+      return;
+    matrixStack.pushModel();
+    gl.disable(CULL_FACE);
+    if(opacity != 1.0)
+      gl.uniform1f(uniformAlpha, opacity);
+    if(!forceTexture && !game_textured)
+    {
+      gl.uniform1f(uniformRed, colors[version].red);
+      gl.uniform1f(uniformGreen, colors[version].green);
+      gl.uniform1f(uniformBlue, colors[version].blue);
+    }
+    if(game_3d)
+    {
+      matrixStack.modelMatrix.multiply(camera.getDirection(partialTime));
+      if(rotation != 0)
+        matrixStack.modelMatrix.multiply(MatrixFactory.rotationMatrix(rotation, 0.0, 0.0, 1.0));
+      matrixStack.modelMatrix.multiply(MatrixFactory.rotationMatrix(PI, 1.0, 0.0, 0.0));
+    }
+    matrixStack.modelMatrix.writeToUniform(uniformMMatrix);
+
+    if(game_3d)
+      gl.uniform1i(uniformRender3D, 0);
+    if(!game_textured && forceTexture)
+      gl.uniform1i(uniformUseTexture, 1);
+
+    gl.activeTexture(TEXTURE0);
+    gl.bindTexture(TEXTURE_2D, spriteTexture);
+    gl.uniform1i(uniformSpriteSampler, 0);
+
+    gl.enableVertexAttribArray(attribVertexPosition);
+    gl.bindBuffer(ARRAY_BUFFER, boxBuffer);
+    gl.vertexAttribPointer(attribVertexPosition, 3, FLOAT, false, 0, 0);
+
+    if(game_textured || forceTexture)
+    {
+      gl.enableVertexAttribArray(attribVertexTextureCoord);
+      gl.bindBuffer(ARRAY_BUFFER, texBuffers[version]);
+      gl.vertexAttribPointer(attribVertexTextureCoord, 2, FLOAT, false, 0, 0);
+    }
+
+    gl.drawArrays(TRIANGLES, 0, 6);
+
+    gl.disableVertexAttribArray(attribVertexPosition);
+    gl.disableVertexAttribArray(attribVertexTextureCoord);
+
+    if(game_3d)
+      gl.uniform1i(uniformRender3D, 1);
+    if(!game_textured && forceTexture)
+      gl.uniform1i(uniformUseTexture, 0);
+
+    if(opacity != 1.0)
+      gl.uniform1f(uniformAlpha, 1.0);    
+    matrixStack.popModel();
+    gl.enable(CULL_FACE);
   }
 
 }

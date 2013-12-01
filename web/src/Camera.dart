@@ -103,4 +103,13 @@ class Camera
     return lastTransform.interpolate(transform, interpolation);
   }
 
+  Matrix4x3 getDirection(double interpolation)
+  {
+    Matrix4x3 value = lastTransform.interpolate(transform, interpolation);
+    value._elements[12] = 0.0;
+    value._elements[13] = 0.0;
+    value._elements[14] = 0.0;
+    return value;
+  }
+
 }

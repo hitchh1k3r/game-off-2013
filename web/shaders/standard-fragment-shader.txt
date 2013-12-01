@@ -12,6 +12,7 @@ uniform int uUseTexture;
 uniform float uRed;
 uniform float uGreen;
 uniform float uBlue;
+uniform float uAlpha;
 
 varying vec4 vWorldSpaceNormal;
 varying vec2 vVertexTextureCoord;
@@ -26,22 +27,25 @@ void main()
 		{
 			vec4 color = texture2D(uDiffuseSampler, vVertexTextureCoord);
 			vec4 emissive = texture2D(uEmissiveSampler, vVertexTextureCoord);
-			gl_FragColor = vec4(max(color.rgb * light, emissive.rgb), depth);
+			if(color.a < 0.5)
+				discard;
+			gl_FragColor = vec4(max(color.rgb * light, emissive.rgb), depth * uAlpha);
 		}
 		else
 		{
-			gl_FragColor = vec4(vec3(uRed, uGreen, uBlue) * light, depth);
+			gl_FragColor = vec4(vec3(uRed, uGreen, uBlue) * light, depth * uAlpha);
 		}
 	}
 	else
 	{
 		if(uUseTexture == 1)
 		{
-			gl_FragColor = texture2D(uSpriteSampler, vVertexTextureCoord);
+			vec4 color = texture2D(uSpriteSampler, vVertexTextureCoord);
+			gl_FragColor = vec4(color.rgb, color.a*uAlpha);
 		}
 		else
 		{
-			gl_FragColor = vec4(uRed, uGreen, uBlue, 1);
+			gl_FragColor = vec4(uRed, uGreen, uBlue, uAlpha);
 		}
 	}
 }

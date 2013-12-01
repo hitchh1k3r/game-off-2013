@@ -11,6 +11,11 @@ class Sound
   
   static void init()
   {
+    if(window.navigator.userAgent.contains('Firefox'))
+    {
+      useWebAudio = false; // The newest version of Firefox breaks my WebAudio implementation...
+      return;             //  So we force the fallback system on FF.
+    }
     try
     {
       audio = new AudioContext();
@@ -122,15 +127,18 @@ class Music extends Sound
   
   Object play()
   {
-    stop();
-    activeMusic = super.play();
-    if(Sound.useWebAudio)
+    if(loaded)
     {
-      (activeMusic as AudioBufferSourceNode).loop = true;
-    }
-    else
-    {
-      (activeMusic as AudioElement).loop = true;
+      stop();
+      activeMusic = super.play();
+      if(Sound.useWebAudio)
+      {
+        (activeMusic as AudioBufferSourceNode).loop = true;
+      }
+      else
+      {
+        (activeMusic as AudioElement).loop = true;
+      }
     }
     return activeMusic;
   }

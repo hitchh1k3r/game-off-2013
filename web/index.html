@@ -7,39 +7,91 @@
     <link rel="stylesheet" href="gameoff2013.css">
   </head>
   <body>
-    <h1 class="title">gitFighter</h1>
+    <div id="noChrome">Experiancing problems? Try the game on <a href="https://www.google.com/chrome/">Google Chrome</a>.</div>
+    <div class="content_wrapper">
+      <div class="inner_wrapper">
+        <h1 class="title">gitFighter</h1>
 
-    <br /><br /><br /><br />
+        <br /><br /><br /><br />
 
-    <div class="center">
-      <div class="canvas_wrapper">
-        <canvas id="canvas" width="1000" height="700"></canvas>
-        <div id="circle"></div>
+        <div class="center">
+          <div class="canvas_wrapper">
+            <canvas id="canvas" width="1000" height="700"></canvas>
+            <img src="img/sound.png" id="soundButton" alt="Toggle Sound" />
+            <img src="img/music.png" id="musicButton" alt="Toggle Music" />
+            <div id="commandLine">
+              <div id="CMD">$ ./gitFighter<br /><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gggg&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FFFFF&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gggg&nbsp;&nbsp;h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;t<br />
+&nbsp;&nbsp;&nbsp;&nbsp;g&nbsp;&nbsp;&nbsp;g&nbsp;&nbsp;i&nbsp;&nbsp;ttttt&nbsp;&nbsp;&nbsp;F&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i&nbsp;&nbsp;g&nbsp;&nbsp;&nbsp;g&nbsp;&nbsp;h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ttttt<br />
+&nbsp;&nbsp;&nbsp;&nbsp;g&nbsp;&nbsp;&nbsp;g&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FFF&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;g&nbsp;&nbsp;&nbsp;g&nbsp;&nbsp;h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;eee&nbsp;&nbsp;&nbsp;rrrr<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gggg&nbsp;&nbsp;i&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;F&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i&nbsp;&nbsp;&nbsp;gggg&nbsp;&nbsp;hhhh&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e&nbsp;&nbsp;&nbsp;e&nbsp;&nbsp;r&nbsp;&nbsp;&nbsp;r<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;g&nbsp;&nbsp;i&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;F&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;g&nbsp;&nbsp;h&nbsp;&nbsp;&nbsp;h&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;eeeee&nbsp;&nbsp;r<br />
+&nbsp;&nbsp;&nbsp;&nbsp;g&nbsp;&nbsp;&nbsp;g&nbsp;&nbsp;i&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;&nbsp;t&nbsp;&nbsp;F&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i&nbsp;&nbsp;g&nbsp;&nbsp;&nbsp;g&nbsp;&nbsp;h&nbsp;&nbsp;&nbsp;h&nbsp;&nbsp;&nbsp;&nbsp;t&nbsp;&nbsp;t&nbsp;&nbsp;e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;r<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ggg&nbsp;&nbsp;&nbsp;i&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tt&nbsp;&nbsp;&nbsp;F&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i&nbsp;&nbsp;&nbsp;ggg&nbsp;&nbsp;&nbsp;h&nbsp;&nbsp;&nbsp;h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tt&nbsp;&nbsp;&nbsp;&nbsp;eee&nbsp;&nbsp;&nbsp;r<br />
+<br /><br />
+You're standing alone in the cold metalic hall of your spacecraft. Looking around you see a pile of bits on the floor. What do you do?</div>
+<div id="CMD_Input_line">&gt; <input id="CMD_Input" type="text" /></div>
+            </div>
+            <div id="upgradeScreen">
+              <div id="circleBin">
+                <div id="circle" class="circle"></div>
+                <div id="circle0" class="circle"></div>
+              </div>
+              <div id="vertLine" class="line active" style="top: 349px; left: 450px; height: 0; width: 50px;"></div>
+              <div id="bend1" class="leftLineTop" style="top: 190px;"></div>
+              <div id="bend2" class="rightLineTop" style="top: 190px;"></div>
+              <div id="line1" class="line" style="top: 200px; height: 140px;"></div>
+
+              <div id="bend3" class="leftLineTop" style="top: 265px;"></div>
+              <div id="bend4" class="rightLineTop" style="top: 265px;"></div>
+              <div id="line2" class="line" style="top: 275px; height: 65px;"></div>
+
+              <div id="bend5" class="leftLineBottom" style="top: 425px;"></div>
+              <div id="bend6" class="rightLineBottom" style="top: 425px;"></div>
+              <div id="line3" class="line" style="top: 360px; height: 65px;"></div>
+
+              <div id="bend7" class="leftLineBottom" style="top: 500px;"></div>
+              <div id="bend8" class="rightLineBottom" style="top: 500px;"></div>
+              <div id="line4" class="line" style="top: 360px; height: 140px;"></div>
+
+              <div id="arrow1" class="downArrow"></div>
+              <div id="arrow2" class="upArrow"></div>
+
+              <table class="bubbleTable"><tr style="height: 150px;">
+              <td colspan="2"><div class="textBubble">You have gathered the bits to weave a change.<br />Select which change you will push:</div></td></tr>
+              <tr style="height: 75px;"><td><div class="button" id="button1"></div></td>
+              <td><div class="button" id="button2"></div></td></tr>
+              <tr style="height: 75px;"><td><div class="button" id="button3"></div></td>
+              <td><div class="button" id="button4"></div></td></tr>
+              <tr style="height: 85px;"></tr>
+              <tr style="height: 75px;"><td><div class="button" id="button5"></div></td>
+              <td><div class="button" id="button6"></div></td></tr>
+              <tr style="height: 75px;"><td><div class="button" id="button7"></div></td>
+              <td><div class="button" id="button8"></div></td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <br /><br />
+
+        <div id="controlBox" class="center">
+          <table class="controlTable"><tr><td valign="top"><b>Controls:</b></td><td>
+            <div id="controlText">A D or Left Right - Rotate Ship<br />Space or W or Up - Thrust<br />Shift - Boost<br />Enter - Fire</div>
+          </td></tr></table>
+        </div>
+
+        <br /><br />
+
+        <div class="center">
+          <a href="https://github.com/hitchh1k3r/gitFighter">https://github.com/hitchh1k3r/gitFighter</a>
+        </div>
+
+        <div id="antiCircle"></div>
       </div>
     </div>
 
-    <br /><br />
-
-      <div class="center">
-        <table class="controlTable"><tr><td valign="top"><b>Controls:</b></td>
-        <td>
-        
-        W A S D - AIM<br />
-        Mouse - Aim<br />
-        Q E - Roll<br />
-        Right Click - Roll<br />
-        Space - Move<br />
-        Shift + Space - Move Faster<hr />
-        1 - Toggle 2D/3D<br />
-        2 - Toggle Textures (only 3D complete)<br />
-        5 - White Background<br />
-        6 - Black Background
-        
-        </td></tr></table>
-      </div>
-
-    <!-- <script type="application/dart" src="src/Main.dart"></script> <!-- -->
-    <script src="js/Main.dart.js"></script> <!-- -->
-    <script src="packages/browser/dart.js"></script>
+    <script src="js/facebook.js"></script>
+    <script src="js/Main.dart.js"></script>
   </body>
 </html>
