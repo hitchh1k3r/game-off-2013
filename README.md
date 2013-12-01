@@ -1,8 +1,8 @@
-![alt text](http://hitchh1k3r.github.io/gitFighter/screen1.png "gitFighter Title")
+![alt text](http://hitchh1k3r.github.io/gitFighter/web/screen1.png "gitFighter Title")
 
 ## Gameplay
 
-![alt text](http://hitchh1k3r.github.io/gitFighter/screen2.png "A 2D shooter!")
+![alt text](http://hitchh1k3r.github.io/gitFighter/web/screen2.png "A 2D shooter!")
 
 A build-your-own space shooter! Collect bits to push new game features, and watch your game project unfold!
 
